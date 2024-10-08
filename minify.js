@@ -1,25 +1,55 @@
-import { minify } from 'bun';
-import fs from 'fs';
-import path from 'path';
+import { minify } from 'terser';
+import { readFileSync, writeFileSync, readdirSync, statSync } from 'fs';
+import { join, extname } from 'path';
 
 async function minifyFile(filePath) {
-    const code = await Bun.file(filePath).text();
-    const minified = await minify(code);
-    await Bun.write(filePath, minified);
-}
-
-async function processDirectory(dir) {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-    for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) {
-            await processDirectory(fullPath);
-        } else if (entry.isFile() && entry.name.endsWith('.js')) {
-            await minifyFile(fullPath);
-        }
+  const code = readFileSync(filePath, 'utf8');
+  const result = await minify(code, {
+    mangle: true,
+    compress: {
+      dead_code: true,
+      drop_debugger: true,
+      conditionals: true,
+      evaluate: true,
+      booleans: true,
+      loops: true,
+      unused: true,
+      hoist_funs: true,
+      keep_fargs: false,
+      hoist_vars: true,
+      if_return: true,
+      join_vars: true,
+      cascade: true,
+      side_effects: true,
+      warnings: false
     }
+  });
+  return result.code;
 }
 
-// Start processing from the root directory
-processDirectory('.').catch(console.error);
+async function processDirectory(directory) {
+  const files = readdirSync(directory);
+
+  for (const file of files) {
+    const filePath = join(directory, file);
+    const stat = statSync(filePath);
+
+    if (stat.isDirectory()) {
+      await processDirectory(filePath);
+    } else if (extname(file) === '.js') {
+      console.log(`Minifying ${filePath}`);
+      try {
+        const minifiedCode = await minifyFile(filePath);
+        writeFileSync(filePath, minifiedCode);
+        console.log(`Minified ${filePath}`);
+      } catch (error) {
+        console.error(`Error minifying ${filePath}:`, error);
+      }
+    }
+  }
+}
+
+// Minify all JS files in the google_map_parks directory
+await processDirectory('./google_map_parks');
+
+console.log('Minification complete');

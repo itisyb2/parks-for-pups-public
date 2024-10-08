@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Deploy Code",
+            "type": "shell",
+            "command": "git add . && git commit -m \"Auto-deploy: $(date)\" && git push -u origin master",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        }
+    ]
+}

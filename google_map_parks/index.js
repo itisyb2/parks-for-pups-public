@@ -333,3 +333,4 @@ async function initMap() {
 window.onload = initMap;
 
 
+console.log("init")

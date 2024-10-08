@@ -1,0 +1,9 @@
+{
+    "dependencies": {
+      "terser": "^5.14.0"
+    },
+    "scripts": {
+      "minify": "bun run minify.js"
+    },
+    "type": "module"
+  }
